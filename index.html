@@ -41,10 +41,6 @@
             <input type="number" id="time" name="time" min="0">
             <br>
 
-            <label for="throwWave">Wave To Throw On (currently unimplemented, calculates using wave 1):</label>
-            <input type="text" id="throwWave" name="throwWave" min="1" max="3" value="1">
-            <br>
-
             <!-- Button to trigger the script -->
             <button onclick="runScript()">Calculate Scales</button>
 
@@ -98,7 +94,7 @@
             const rank4 = parseInt(document.getElementById("rank4").value);
             const hours = parseFloat(document.getElementById("time").value);
             const time = hours*3600;
-            const throwWave = parseInt(document.getElementById("throwWave").value);
+            const throwWave = 1;
 
             // Output section
             let outputText = '';
