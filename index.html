@@ -62,9 +62,6 @@
 
     <!-- Add your JavaScript links or scripts here -->
     <script>
-        const throwMatchTime = [58, 183, 303];
-        const winMatchTime = 421;
-        const bossTime = 125;
         const bossRankChange = 20;
         
         function avgScales(rank) {
@@ -79,8 +76,12 @@
         }
 
         function avgTime(throwCount, throwWave) {
+            const throwMatchTime = [58, 183, 303];
+            const winMatchTime = 421;
+            const bossTime = 125;
+            
             console.log(avgRankChange(throwCount));
-            return (((avgRankChange(throwCount) + (20 * throwCount)) / 20) * winMatchTime) +
+            return (((avgRankChange(throwCount) + (20.0 * throwCount)) / 20.0) * winMatchTime) +
                 (throwCount * throwMatchTime[throwWave - 1]) + bossTime;
         }
 
