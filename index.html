@@ -13,7 +13,7 @@
 
 <body>
     <header>
-        <h1>Splatoon 3 Salmon Run Scale Reward Optimizer crying face edition</h1>
+        <h1>Splatoon 3 Salmon Run Scale Reward Optimizer mulchgiving edition</h1>
     </header>
 
     <main>
@@ -72,9 +72,9 @@
             let avgRank = (rank[0] + rank[1] + rank[2] + rank[3]) / 4;
             let hazard = avgRank < 865 ? 160 + 0.2 * avgRank : 333;
             let scales = [
-                (0.05 + 0.05 * hazard / 111) * 10, // bronze
-                (0.01 * hazard / 111) * 10, // silver
-                10 - ((0.05 + 0.05 * hazard / 111) * 10 + (0.01 * hazard / 111) * 10) // gold
+                10 - ((0.05 + 0.05 * hazard / 111) * 10 + (0.01 * hazard / 111) * 10), // bronze
+                (0.05 + 0.05 * hazard / 111) * 10, // silver
+                (0.01 * hazard / 111) * 10 // gold
             ];
             return scales;
         }
