@@ -49,9 +49,7 @@
             <button onclick="runScript()">Run Scale Calculator</button>
 
             <!-- Output section -->
-            <div id="output">
-                <textarea id="outputTextarea" readonly></textarea>
-            </div>
+            <div id="output"></div>
         </section>
     </main>
 
@@ -172,7 +170,7 @@
             }
 
             // Display the output in the textarea
-            document.getElementById("outputTextarea").value = outputText;
+            document.getElementById("output").value = outputText;
         }
     </script>
 </body>
