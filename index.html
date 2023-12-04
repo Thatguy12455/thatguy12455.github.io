@@ -13,7 +13,7 @@
 
 <body>
     <header>
-        <h1>Splatoon 3 Salmon Run Scale Reward Optimizer skibidi edition</h1>
+        <h1>Splatoon 3 Salmon Run Scale Reward Optimizer bowser fart edition</h1>
     </header>
 
     <main>
@@ -41,12 +41,12 @@
             <input type="number" id="time" name="time" min="0">
             <br>
 
-            <label for="throwWave">Wave To Throw On:</label>
+            <label for="throwWave">Wave To Throw On (currently unimplemented, calculates using wave 1):</label>
             <input type="text" id="throwWave" name="throwWave" min="1" max="3" value="1">
             <br>
 
             <!-- Button to trigger the script -->
-            <button onclick="runScript()">Run EVP Calculator</button>
+            <button onclick="runScript()">Run Scale Calculator</button>
 
             <!-- Output section -->
             <div id="output">
@@ -109,6 +109,12 @@
                 let tempTime = time;
                 let playerNoRank = 0;
 
+                outputText += ` ${tempRank[0]}
+                ${tempRank[1]}
+                ${tempRank[2]}
+                ${tempRank[3]}
+                `;
+                
                 while (tempTime > 0) {
                     for (let i = 0; i < tempRank.length; i++) {
                         tempRank[i] += avgRankChange[throwCount];
