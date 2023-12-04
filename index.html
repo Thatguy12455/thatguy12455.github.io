@@ -115,7 +115,7 @@
                 
                 while (tempTime > 0) {
                     for (let i = 0; i < tempRank.length; i++) {
-                        tempRank[i] += avgRankChange[throwCount];
+                        tempRank[i] += avgRankChange(throwCount);
                         if (tempRank[i] > 999) {
                             tempRank[i] = 999;
                         } else if (tempRank[i] <= 0) {
