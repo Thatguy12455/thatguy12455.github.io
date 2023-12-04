@@ -82,8 +82,7 @@
 
             //random 20 is added to compensate for boss match not being a part of avgRankChange
             console.log(((avgRankChange(throwCount) + 20 + (20.0 * throwCount)) / 20.0));
-            return ((((avgRankChange(throwCount) + 20 + (20.0 * throwCount)) / 20.0) * winMatchTime) +
-                (throwCount * throwMatchTime[throwWave - 1]) + bossTime);
+            return ((((avgRankChange(throwCount) + 20 + (20.0 * throwCount)) / 20.0) * winMatchTime) + (throwCount * throwMatchTime[throwWave - 1]) + bossTime);
         }
 
         function avgRankChange(throwCount) {
