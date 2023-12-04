@@ -81,7 +81,6 @@
             const bossTime = 125;
 
             //random 20 is added to compensate for boss match not being a part of avgRankChange
-            console.log((throwCount * throwMatchTime[throwWave - 1]) + 10);
             return ((((avgRankChange(throwCount) + 20 + (20.0 * throwCount)) / 20.0) * winMatchTime) + (throwCount * throwMatchTime[throwWave - 1]) + bossTime);
         }
 
@@ -138,6 +137,7 @@
 
                     for (let i = 0; i < tempRank.length; i++) {
                         tempRank[i] += bossRankChange;
+                        console.log(tempRank[i]);
                         if (tempRank[i] > 999) {
                             tempRank[i] = 999;
                         }
