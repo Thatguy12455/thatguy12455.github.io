@@ -64,6 +64,15 @@
     <script>
         const bossRankChange = 20;
         
+        function avgTime(throwCount, throwWave) {
+            const throwMatchTime = [58, 183, 303];
+            const winMatchTime = 421;
+            const bossTime = 125;
+
+            //random 20 is added to compensate for boss match not being a part of avgRankChange
+            return ((((avgRankChange(throwCount) + 20 + (20.0 * throwCount)) / 20.0) * winMatchTime) + (throwCount * throwMatchTime[throwWave - 1]) + bossTime);
+        }
+
         function avgScales(rank) {
             let avgRank = (rank[0] + rank[1] + rank[2] + rank[3]) / 4;
             let hazard = avgRank < 865 ? 160 + 0.2 * avgRank : 333;
@@ -75,15 +84,7 @@
             return scales;
         }
 
-        function avgTime(throwCount, throwWave) {
-            const throwMatchTime = [58, 183, 303];
-            const winMatchTime = 421;
-            const bossTime = 125;
-
-            //random 20 is added to compensate for boss match not being a part of avgRankChange
-            return ((((avgRankChange(throwCount) + 20 + (20.0 * throwCount)) / 20.0) * winMatchTime) + (throwCount * throwMatchTime[throwWave - 1]) + bossTime);
-        }
-
+     
         function avgRankChange(throwCount) {
             const avgRankChangeArray = [75.64, 35.64, -4.36, -40.4, -72, -100];
             
