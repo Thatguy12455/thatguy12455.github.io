@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Splatoon 3 Salmon Run Scale Reward Optimizer</title>
+    <title>Comodo_'s Splatoon 3 Salmon Run Scale Reward Optimizer</title>
     <!-- Add your CSS links or styles here -->
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -13,7 +13,7 @@
 
 <body>
     <header>
-        <h1>Splatoon 3 Salmon Run Scale Reward Optimizer blejighh edition</h1>
+        <h1>Comodo_'s Splatoon 3 Salmon Run Scale Reward Optimizer v1</h1>
     </header>
 
     <main>
@@ -46,7 +46,7 @@
             <br>
 
             <!-- Button to trigger the script -->
-            <button onclick="runScript()">Run Scale Calculator</button>
+            <button onclick="runScript()">Calculate Scales</button>
 
             <!-- Output section -->
              <div id="output">
@@ -138,7 +138,6 @@
 
                     for (let i = 0; i < tempRank.length; i++) {
                         tempRank[i] += 20;
-                        console.log(tempRank[i]);
                         if (tempRank[i] > 999) {
                             tempRank[i] = 999;
                         }
@@ -157,7 +156,7 @@
                 `;
                 if (playerNoRank !== 0) {
                     outputText += `
-                    Player ${playerNoRank} Hit EVP 0 after ${(time-tempTime)/3600.0} hours
+                    Player ${playerNoRank} Hit EVP 0 after ${((time-tempTime)/3600.0).toFixed(3)} hours
                     `;
                     
                 }
