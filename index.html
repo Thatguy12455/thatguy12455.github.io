@@ -83,7 +83,10 @@
             return (((avgRankChange(throwCount) + (20 * throwCount)) / 20) * winMatchTime) +
                 (throwCount * throwMatchTime[throwWave - 1]) + bossTime;
         }
-        
+
+        function avgRankChange(throwCount) {
+            return avgRankChange[throwCount];
+        }
         function runScript() {
             // Retrieve values from input boxes
             const rank1 = parseInt(document.getElementById("rank1").value);
