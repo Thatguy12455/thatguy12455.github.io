@@ -4,34 +4,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Page Title</title>
+    <title>EVP Calculator</title>
     <!-- Add your CSS links or styles here -->
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Add your CSS styles here */
+        #output {
+            font-weight: bold;
+            color: green;
+            white-space: pre-line;
+        }
+    </style>
 </head>
 
 <body>
     <header>
-        <h1>Your Website Name</h1>
-        <!-- Add your navigation menu or other header content here -->
+        <h1>EVP Calculator</h1>
     </header>
 
     <main>
         <section>
-            <h2>Welcome to Your Website</h2>
-            <p>This is the main content of your page.</p>
+            <h2>Input Parameters</h2>
+
+            <!-- Input boxes for rank array and time -->
+            <label for="rank1">Player 1 Rank:</label>
+            <input type="number" id="rank1" name="rank1" min="0" max="999">
+            <br>
+
+            <label for="rank2">Player 2 Rank:</label>
+            <input type="number" id="rank2" name="rank2" min="0" max="999">
+            <br>
+
+            <label for="rank3">Player 3 Rank:</label>
+            <input type="number" id="rank3" name="rank3" min="0" max="999">
+            <br>
+
+            <label for="rank4">Player 4 Rank:</label>
+            <input type="number" id="rank4" name="rank4" min="0" max="999">
+            <br>
+
+            <label for="time">Time to Play (in hours):</label>
+            <input type="number" id="time" name="time" min="0">
+            <br>
+
+            <!-- Button to trigger the script -->
+            <button onclick="runScript()">Run EVP Calculator</button>
+
+            <!-- Output section -->
+            <div id="output"></div>
         </section>
-
-        <!-- Add more sections or content as needed -->
-
     </main>
 
     <footer>
         <!-- Add your footer content here -->
-        <p>&copy; 2023 Your Website Name. All rights reserved.</p>
+        <p>&copy; 2023 EVP Calculator. All rights reserved.</p>
     </footer>
 
     <!-- Add your JavaScript links or scripts here -->
-    <script src="script.js"></script>
+    <script>
+        function runScript() {
+            // Retrieve values from input boxes
+            const rank1 = parseInt(document.getElementById("rank1").value);
+            const rank2 = parseInt(document.getElementById("rank2").value);
+            const rank3 = parseInt(document.getElementById("rank3").value);
+            const rank4 = parseInt(document.getElementById("rank4").value);
+            const time = parseInt(document.getElementById("time").value);
+            const throwWave = parseInt(document.getElementById("throwWave").value);
+
+            // Set the input values in the script
+            rank = [rank1, rank2, rank3, rank4];
+
+            // Output section
+            let outputText = '';
+
+            // Run calculations for each throw count from 0 to 5 inclusive
+            for (let throwCount = 0; throwCount <= 5; throwCount++) {
+                // Calculation logic
+                let totalScales = [0.0, 0.0, 0.0];
+                let bossEncounters = 0;
+                let tempRank = [...rank];
+                let tempTime = time;
+                let playerNoRank = 0;
+
+                while (tempTime > 0) {
+                    for (let i = 0; i < tempRank.length; i++) {
+                        tempRank[i] += avgRankChange[throwCount];
+                        if (tempRank[i] > 999) {
+                            tempRank[i] = 999;
+                        } else if (tempRank[i] <= 0) {
+                            tempRank[i] = 0;
+                            playerNoRank = i + 1;
+                        }
+                    }
+
+                    tempTime -= avgTime(throwCount, throwWave);
+
+                    if (playerNoRank !== 0) {
+                        break;
+                    }
+
+                    for (let i = 0; i < 3; i++) {
+                        totalScales[i] += avgScales(tempRank)[i];
+                    }
+
+                    bossEncounters++;
+
+                    for (let i = 0; i < tempRank.length; i++) {
+                        tempRank[i] += bossRankChange;
+                        if (tempRank[i] > 999) {
+                            tempRank[i] = 999;
+                        }
+                    }
+                }
+
+                // Build the output text for each throw count
+                outputText += `
+                    Results for Throw Count = ${throwCount}
+                    Mode Boss Encounters: ${bossEncounters}
+                    Mode Bronze: ${totalScales[0].toFixed(3)}
+                    Mode Silver: ${totalScales[1].toFixed(3)}
+                    Mode Gold: ${totalScales[2].toFixed(3)}
+
+                    ------------------------------
+                `;
+            }
+
+            // Display the output in the "output" div
+            document.getElementById("output").innerText = outputText;
+        }
+    </script>
 </body>
 
 </html>
