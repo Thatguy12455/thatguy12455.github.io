@@ -57,6 +57,7 @@
 
     <footer>
         <!-- Add your footer content here -->
+        <p>&copy; 2023 EVP Calculator. All rights reserved.</p>
     </footer>
 
     <!-- Add your JavaScript links or scripts here -->
@@ -118,18 +119,17 @@
 
                 // Build the output text for each throw count
                 outputText += `
-                    Results for Throw Count = ${throwCount}
-                    Mode Boss Encounters: ${bossEncounters}
-                    Mode Bronze: ${totalScales[0].toFixed(3)}
-                    Mode Silver: ${totalScales[1].toFixed(3)}
-                    Mode Gold: ${totalScales[2].toFixed(3)}
-
-                    ------------------------------
+                    <p>Results for Throw Count = ${throwCount}</p>
+                    <p>Mode Boss Encounters: ${bossEncounters}</p>
+                    <p>Mode Bronze: ${totalScales[0].toFixed(3)}</p>
+                    <p>Mode Silver: ${totalScales[1].toFixed(3)}</p>
+                    <p>Mode Gold: ${totalScales[2].toFixed(3)}</p>
+                    <hr>
                 `;
             }
 
-            // Display the output in the "output" div
-            document.getElementById("output").innerText = outputText;
+            // Display the output in the "output" div using innerHTML
+            document.getElementById("output").innerHTML = outputText;
         }
     </script>
 </body>
