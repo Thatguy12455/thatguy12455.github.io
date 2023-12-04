@@ -13,7 +13,7 @@
 
 <body>
     <header>
-        <h1>Splatoon 3 Salmon Run Scale Reward Optimizer bowser fart edition</h1>
+        <h1>Splatoon 3 Salmon Run Scale Reward Optimizer  fart edition</h1>
     </header>
 
     <main>
@@ -109,11 +109,7 @@
                 let tempTime = time;
                 let playerNoRank = 0;
 
-                outputText += ` ${tempRank[0]}
-                ${tempRank[1]}
-                ${tempRank[2]}
-                ${tempRank[3]}
-                `;
+               
                 
                 while (tempTime > 0) {
                     for (let i = 0; i < tempRank.length; i++) {
@@ -125,7 +121,11 @@
                             playerNoRank = i + 1;
                         }
                     }
-
+ outputText += ` ${tempRank[0]}
+                ${tempRank[1]}
+                ${tempRank[2]}
+                ${tempRank[3]}
+                `;
                     tempTime -= avgTime(throwCount, throwWave);
 
                     if (playerNoRank !== 0) {
