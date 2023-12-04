@@ -62,6 +62,22 @@
 
     <!-- Add your JavaScript links or scripts here -->
     <script>
+        function avgScales(rank) {
+            let avgRank = (rank[0] + rank[1] + rank[2] + rank[3]) / 4;
+            let hazard = avgRank < 865 ? 160 + 0.2 * avgRank : 333;
+            let scales = [
+                (0.05 + 0.05 * hazard / 111) * 10, // bronze
+                (0.01 * hazard / 111) * 10, // silver
+                10 - ((0.05 + 0.05 * hazard / 111) * 10 + (0.01 * hazard / 111) * 10) // gold
+            ];
+            return scales;
+        }
+
+        function avgTime(throwCount, throwWave) {
+            return (((avgRankChange(throwCount) + (20 * throwCount)) / 20) * winMatchTime) +
+                (throwCount * throwMatchTime[throwWave - 1]) + bossTime;
+        }
+        
         function runScript() {
             // Retrieve values from input boxes
             const rank1 = parseInt(document.getElementById("rank1").value);
