@@ -688,7 +688,7 @@
 
       // check if derank occured
       if (allResults[0].derankData.player != -1) {
-        outputText += `Player ${allResults[0].derankData.player} will reach EVP 0 at an average time of ${(allResults[0].derankData.avg / 3600)} hours. Following results use this as the average play time.\n`;
+        outputText += `Player ${(allResults[0].derankData.player+1)} will reach EVP 0 at an average time of ${(allResults[0].derankData.avg / 3600)} hours. Following results use this as the average play time.\n`;
       }
 
       // print remaining results
