@@ -109,7 +109,7 @@
         this.bossTime;
         this.bosses;
         this.scales;
-        this.finalRank;
+        this.finalRanks;
         this.hazard;
         this.rankChange;
 
@@ -701,6 +701,10 @@
       outputText += `Gold: ${allResults[0].scales.avg[2]} \n`;
       outputText += `Rank change: ${allResults[0].rankChange.avg} \n`;
       outputText += `Hazard: ${allResults[0].hazard.avg} \n`;
+      outputText += `Final Rank of Player 1: ${allResults[0].finalRanks.avg[0]} \n`;
+      outputText += `Final Rank of Player 2: ${allResults[0].finalRanks.avg[1]} \n`;
+      outputText += `Final Rank of Player 3: ${allResults[0].finalRanks.avg[2]} \n`;
+      outputText += `Final Rank of Player 4: ${allResults[0].finalRanks.avg[3]} \n`;
 
 
 
