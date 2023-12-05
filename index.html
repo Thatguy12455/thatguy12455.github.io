@@ -2,174 +2,715 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comodo_'s Splatoon 3 Salmon Run Scale Reward Optimizer</title>
-    <!-- Add your CSS links or styles here -->
-    <link rel="stylesheet" href="styles.css">
-    <style>
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comodo_'s Splatoon 3 Salmon Run Scale Reward Optimizer</title>
+  <!-- Add your CSS links or styles here -->
+  <link rel="stylesheet" href="styles.css">
+  <style>
+  </style>
 </head>
 
 <body>
-    <header>
-        <h1>Comodo_'s Splatoon 3 Salmon Run Scale Reward Optimizer v1</h1>
-    </header>
+  <header>
+    <h1>Comodo_'s Splatoon 3 Salmon Run Scale Reward Optimizer v1</h1>
+  </header>
 
-    <main>
-        <section>
-            <h2>Input Parameters</h2>
+  <main>
+    <section>
+      <h2>Input Parameters</h2>
 
-            <!-- Input boxes for rank array and time -->
-           <label for="rank1">Player 1 EVP Rank:</label>
-            <input type="number" id="rank1" name="rank1" min="0" max="999">
-            <br>
+      <!-- Input boxes for rank array and time -->
+      <label for="rank1">Player 1 EVP Rank:</label>
+      <input type="number" id="rank1" name="rank1" min="0" max="999">
+      <br>
 
-            <label for="rank2">Player 2 EVP Rank:</label>
-            <input type="number" id="rank2" name="rank2" min="0" max="999">
-            <br>
+      <label for="rank2">Player 2 EVP Rank:</label>
+      <input type="number" id="rank2" name="rank2" min="0" max="999">
+      <br>
 
-            <label for="rank3">Player 3 EVP Rank:</label>
-            <input type="number" id="rank3" name="rank3" min="0" max="999">
-            <br>
+      <label for="rank3">Player 3 EVP Rank:</label>
+      <input type="number" id="rank3" name="rank3" min="0" max="999">
+      <br>
 
-            <label for="rank4">Player 4 EVP Rank:</label>
-            <input type="number" id="rank4" name="rank4" min="0" max="999">
-            <br>
+      <label for="rank4">Player 4 EVP Rank:</label>
+      <input type="number" id="rank4" name="rank4" min="0" max="999">
+      <br>
 
-            <label for="time">Maximum Desired Playtime (in hours, decimals allowed):</label>
-            <input type="number" id="time" name="time" min="0">
-            <br>
+      <label for="time">Maximum Desired Playtime (in hours, decimals allowed):</label>
+      <input type="number" id="time" name="time" min="0">
+      <br>
 
-            <!-- Button to trigger the script -->
-            <button onclick="runScript()">Calculate Scales</button>
+      <select id="dropdown">
+        <option value="Boss Encounters">Boss Encounters</option>
+        <option value="Bronze Scales">Bronze Scales</option>
+        <option value="Silver Scales">Silver Scales</option>
+        <option value="Gold Scales">Gold Scales</option>
+        <option value="Rank Change Between Bosses">Rank Change Between Bosses</option>
+        <option value="Average Hazard Level Of Bosses">Average Hazard Level Of Bosses</option>
+      </select>
 
-            <!-- Output section -->
-             <div id="output">
-                <textarea id="outputTextarea" readonly></textarea>
-            </div>
-        </section>
-    </main>
+      <!-- Button to trigger the script -->
+      <button onclick="runScript()">Calculate Optimal Output</button>
 
-    <footer>
-        <!-- Add your footer content here -->
-        <p></p>
-    </footer>
+      <!-- Output section -->
+      <div id="output">
+        <textarea id="outputTextarea" readonly></textarea>
+      </div>
+    </section>
+  </main>
 
-    <!-- Add your JavaScript links or scripts here -->
-    <script>
-        const bossRankChange = 20;
-        
-        function avgTime(throwCount, throwWave) {
-            const throwMatchTime = [58, 183, 303];
-            const winMatchTime = 421;
-            const bossTime = 125;
+  <footer>
+    <!-- Add your footer content here -->
+    <p></p>
+  </footer>
 
-            //random 20 is added to compensate for boss match not being a part of avgRankChange
-            return ((((avgRankChange(throwCount) + 20 + (20.0 * throwCount)) / 20.0) * winMatchTime) + (throwCount * throwMatchTime[throwWave - 1]) + bossTime);
+  <!-- Add your JavaScript links or scripts here -->
+  <script>
+
+
+
+    /*||||||||||
+    |||CLASSES||
+    ||||||||||*/
+
+    // class for storing necessary info if a player will derank on average within the chosen time
+    class DerankData {
+      constructor(player, avg, std, max, min) {
+
+        // the player who is to derank (0-3, -1 if none)
+        this.player = player;
+
+        // the data on the time it takes for them to derank (the total time of the session gets capped to the avg value if it exceeds the maximum time inputted by the user)
+        this.avg = avg;
+        this.std = std;
+        this.max = max;
+        this.min = min;
+      }
+    }
+
+    // class for storing average and standard deviation of data values
+    class DataValue {
+      constructor(avg, std, max, min) {
+        // average, standard deviation, max, min
+        this.avg = avg;
+        this.std = std;
+        this.max = max;
+        this.min = min;
+      }
+    }
+
+    // class for storing all info on rewards
+    // once calculated, the sets of result data are stored allResults[] in descending order of desiredType
+    class ResultData {
+      constructor() {
+
+        // data values, all of class DataValue
+        this.bossTime;
+        this.bosses;
+        this.scales;
+        this.finalRank;
+        this.hazard;
+        this.rankChange;
+
+        // derank data, of class DerankData
+        this.derankData;
+
+        // identifying data
+        this.throwCount;
+        this.throwWave;
+        this.time;
+      }
+    }
+
+
+
+
+
+    /*||||||||||
+    ||FUNCTIONS|
+    ||||||||||*/
+
+    // FUNCTION: average rank change between boss encounters
+    function getRankChange(throwCount, throwWave) {
+
+      // calculate average and standard variance of smell upon fighting a boss
+      let probabilities = [0, 0, 0.1, 0.3, 0.6, 1]; // Cumulative distribution function (CDF)
+      let averageRolls = 0; // Expected value (average)
+      let variance = 0; // Variance
+
+      // zero out probabilities to account for skipped rolls due to throwCount
+      if (throwCount != 0) {
+        for (let j = throwCount - 1; j >= 0; j--) {
+          probabilities[j] = 0
+        }
+      }
+
+      // Loop over all possible outcomes
+      for (let i = 0; i < probabilities.length; i++) {
+        // Calculate the probability of outcome `i`
+        let probability = probabilities[i] - (probabilities[i - 1] || 0);
+
+        // Add `i * probability` to the expected value
+        averageRolls += i * probability;
+
+        // Add `i * i * probability` to the variance
+        variance += i * i * probability;
+      }
+
+      variance -= averageRolls * averageRolls;
+
+      let standardDeviation = Math.sqrt(variance);
+
+
+
+      // convert smell upon fighting boss into change in rank
+      // smell + 1 - throwCount gives games won
+      let avg = smellToRank(averageRolls, throwCount, throwWave);
+
+      let std = standardDeviation * 20;
+
+      let max = smellToRank(5, throwCount, throwWave);
+
+      let min = smellToRank(throwCount, throwCount, throwWave);
+
+
+      // return final results
+      return new DataValue(avg, std, max, min);
+    }
+
+
+
+
+
+    // FUNCTION: Converts smell for boss encounter to change in rank given throwCount and throwWave
+    function smellToRank(smell, throwCount, throwWave) {
+      // rank changes per wave lost at
+      let waveLoss = [20, 10, 0];
+      // points lost
+      let pointsLost = throwCount * waveLoss[throwWave - 1];
+
+      // points won
+      let pointsWon = ((smell - throwCount) * 20) + 20;
+
+
+      // return change in rank
+      return pointsWon - pointsLost;
+
+    }
+
+
+
+
+
+    // FUNCTION: average time between bosses
+    function getTime(throwCount, throwWave) {
+      //array of the time for a throw depending on what wave you throw on
+      let throwMatchTime = [58, 183, 303];
+      // time for a full match
+      let winMatchTime = 421;
+      // additional time for a boss
+      let bossTime = 125;
+
+      // calculate average total time on thrown matches
+      let totalThrowTime = (throwCount * throwMatchTime[throwWave - 1]);
+
+      // get rank change data
+      let rankChangeData = getRankChange(throwCount, throwWave);
+
+      //calculate average total time on won matches
+      let avgTotalWinTime = ((rankChangeData.avg + (20.0 * throwCount)) / 20.0) * winMatchTime;
+
+      // calculate standard deviation of avgTotalWinTime
+      let stdTotalWinTime = ((rankChangeData.std + (20.0 * throwCount)) / 20.0) * winMatchTime;
+
+
+      let maxTotalWinTime = ((rankChangeData.max + (20.0 * throwCount)) / 20.0) * winMatchTime;
+
+      let minTotalWinTime = ((rankChangeData.min + (20.0 * throwCount)) / 20.0) * winMatchTime;
+
+      // add together along with boss time for average total time
+      let avg = totalThrowTime + avgTotalWinTime + bossTime;
+
+      // calculate standard deviation
+      let std = stdTotalWinTime;
+
+      // calculate max
+      let max = totalThrowTime + maxTotalWinTime + bossTime;
+
+      // calculate min
+      let min = totalThrowTime + minTotalWinTime + bossTime;
+
+
+      return new DataValue(avg, std, max, min);
+    }
+
+
+
+
+
+    // FUNCTION: scales given hazard
+    function getScales(hazard, bosses) {
+      let scaleNum = 10;
+      // calculate average and standard deviation of probabilities
+      let pAvg = [
+        1 - ((0.05 + 0.05 * hazard.avg / 111) + (0.01 * hazard.avg / 111)), // bronze
+        (0.05 + 0.05 * hazard.avg / 111), // silver
+        (0.01 * hazard.avg / 111) // gold
+      ];
+      let pStd = [
+        1 - ((0.05 + 0.05 * hazard.std / 111) + (0.01 * hazard.std / 111)), // bronze
+        (0.05 + 0.05 * hazard.std / 111), // silver
+        (0.01 * hazard.std / 111) // gold
+      ];
+
+      // calculate average and standard deviation of scale output
+      let avg = [pAvg[0] * scaleNum * bosses.avg, pAvg[1] * scaleNum * bosses.avg, pAvg[2] * scaleNum * bosses.avg];
+      let std = [pStd[0] * scaleNum * bosses.std, pStd[1] * scaleNum * bosses.std, pStd[2] * scaleNum * bosses.std];
+
+      let max = [Math.trunc(scaleNum * bosses.avg), Math.trunc(scaleNum * bosses.avg), Math.trunc(scaleNum * bosses.avg)];
+      let min = [0, 0, 0];
+
+      return new DataValue(avg, std, max, min);
+    }
+
+
+
+
+
+    // FUNCTION: average boss encounters given time and DataValue 'time'
+    function getBosses(time, bossDuration) {
+
+      // just divide time by the length of each boss cycle lol
+      let avg = time / bossDuration.avg;
+      let std = time / bossDuration.std;
+      let max = Math.trunc(time / bossDuration.min);
+      let min = Math.trunc(time / bossDuration.max);
+
+      return new DataValue(avg, std, max, min);
+    }
+
+
+
+
+
+    // FUNCTION: average final given ranks, boss encounters, and change per boss encounter
+    function getFinalRanks(initialRanks, bosses, rankChange) {
+
+      // calculate final ranks for each player
+      let avg = initialRanks.map(r => Math.min(r + bosses.avg * rankChange.avg, 999));
+
+      // calculate standard deviation
+      let std = initialRanks.map(r => r + bosses.std * rankChange.std);
+
+      // calculate max and min
+      let max = [0, 0, 0, 0];
+      let min = [0, 0, 0, 0];
+      // if the max rank change is positive
+      if (rankChange.max > 0) {
+        // use the max number of bosses for highest final rank
+        max = initialRanks.map(r => Math.min(r + bosses.max * rankChange.max, 999));
+      }
+      // if the max rank change is negative
+      else {
+        // use the min number of bosses for highest final rank
+        max = initialRanks.map(r => Math.min(r + bosses.min * rankChange.max, 999));
+      }
+
+      // if the min rank change is positive
+      if (rankChange.min > 0) {
+        // use the min number of bosses for lowest final rank
+        min = initialRanks.map(r => Math.min(r + bosses.min * rankChange.min, 999));
+      }
+      // if the min rank change is negative
+      else {
+        // use the max number of bosses for lowest final rank
+        min = initialRanks.map(r => Math.min(r + bosses.max * rankChange.min, 999));
+      }
+
+      // return DataValue
+      return new DataValue(avg, std, max, min);
+    }
+
+
+
+
+
+    // FUNCTION: average hazard given ranks and boss encounters
+    function getHazard(initialRanks, finalRanks, bossEncounters, rankChange) {
+
+      // Calculate new ratings for each player
+      let newRanks = initialRanks.map(r => Math.min(r + bossEncounters.avg * rankChange.avg, 999));
+
+      // Calculate the average of the new ratings
+      let sum = newRanks.reduce((a, b) => a + b, 0);
+      let averageRank = sum / newRanks.length;
+
+      // Calculate average hazard using average ranks
+      let avg = averageRank < 865 ? 160 + 0.2 * averageRank : 333;
+
+      // Calculate standard deviation
+      let stdRanks = initialRanks.map(r => r + bossEncounters.std * rankChange.std);
+      let stdSum = stdRanks.reduce((a, b) => a + b, 0);
+      let stdAvg = stdSum / stdRanks.length;
+      let std = 0.2 * stdAvg;
+
+      // Calculate max and min
+      let maxSum = finalRanks.max.reduce((a, b) => a + b, 0);
+      let maxAvg = maxSum / finalRanks.max.length;
+      let max = maxAvg < 865 ? 160 + 0.2 * maxAvg : 333;
+
+      let minSum = finalRanks.min.reduce((a, b) => a + b, 0);
+      let minAvg = minSum / finalRanks.min.length;
+      let min = minAvg < 865 ? 160 + 0.2 * minAvg : 333;
+
+      return new DataValue(avg, std, max, min);
+    }
+
+
+
+    // FUNCTION: checks if any player is to reach a derank within the given time, returns DerankData
+    function checkDerank(initialRank, time, throwCount, throwWave) {
+      //assign variables for necessary values
+      let rankChange = getRankChange(throwCount, throwWave);
+      let bossTime = getTime(throwCount, throwWave);
+      let bossEncounters = getBosses(time, bossTime);
+      let finalRanks = getFinalRanks(initialRank, bossEncounters, rankChange);
+
+      // initialize variables
+      let derankPlayer = -1;
+      let timeAvg = 0.0;
+      let timeStd = 0.0;
+      let timeMax = 0.0;
+      let timeMin = 0.0;
+      let derankChance = 0.0;
+
+      // find player with lowest rank
+      let lowestRank = 1000;
+      for (let i = 0; i < initialRank.length; i++) {
+        if (initialRank[i] < lowestRank) {
+          lowestRank = i;
+          console.log(i);
+        }
+      }
+
+
+      // if the lower ranked player goes below 0 on average
+      if (finalRanks.avg[lowestRank] < 0) {
+        // store player index
+        derankPlayer = lowestRank;
+        // calculate the time at which the player will reach 0 rank
+        timeAvg = ((initialRank[lowestRank] / (-rankChange.avg)) * bossTime.avg);
+        timeStd = ((initialRank[lowestRank] / (-rankChange.avg)) * bossTime.std);
+        timeMax = ((initialRank[lowestRank] / (-rankChange.avg)) * bossTime.max);
+        timeMin = ((initialRank[lowestRank] / (-rankChange.avg)) * bossTime.min);
+      }
+
+      // return data
+      return new DerankData(derankPlayer, timeAvg, timeStd, timeMax, timeMin);
+    }
+
+
+
+
+
+    // FUNCTION: calculates all result data given initial ranks, throwCount, and throwWave
+    function getResults(initialRanks, time, throwCount, throwWave, desiredType, desiredCount) {
+
+
+      // create new ResultsData object to store results in
+      let results = new ResultData();
+
+      // assign identifying data
+      results.throwCount = throwCount;
+      results.throwWave = throwWave;
+
+
+
+      // if given time is to be used
+      if (desiredCount == 0) {
+        // use given time
+        results.time = time;
+
+
+        // get derank data
+        results.derankData = checkDerank(initialRanks, time, throwCount, throwWave)
+
+
+        // if there is a derank on average
+        if (results.derankData.avg < time && results.derankData.player != -1) {
+          // update time to match new time (THIS MEANS ALL RESULTS WILL BE BASED ON THE AVERAGE MAXIMUM PLAY TIME)
+          time = results.derankData.avg;
         }
 
-        function avgScales(rank) {
-            let avgRank = (rank[0] + rank[1] + rank[2] + rank[3]) / 4;
-            let hazard = avgRank < 865 ? 160 + 0.2 * avgRank : 333;
-            let scales = [
-                10 - ((0.05 + 0.05 * hazard / 111) * 10 + (0.01 * hazard / 111) * 10), // bronze
-                (0.05 + 0.05 * hazard / 111) * 10, // silver
-                (0.01 * hazard / 111) * 10 // gold
-            ];
-            return scales;
-        }
 
-     
-        function avgRankChange(throwCount) {
-            const avgRankChangeArray = [75.64, 35.64, -4.36, -40.4, -72, -100];
-            
-            return avgRankChangeArray[throwCount];
-        }
-        function runScript() {
-            // Retrieve values from input boxes
-            const rank1 = parseInt(document.getElementById("rank1").value);
-            const rank2 = parseInt(document.getElementById("rank2").value);
-            const rank3 = parseInt(document.getElementById("rank3").value);
-            const rank4 = parseInt(document.getElementById("rank4").value);
-            const hours = parseFloat(document.getElementById("time").value);
-            const time = hours*3600;
-            const throwWave = 1;
+        // calculate primary data
+        results.rankChange = getRankChange(throwCount, throwWave);
+        results.bossTime = getTime(throwCount, throwWave);
 
-            // Output section
-            let outputText = '';
+        // calculate secondary data
+        results.bosses = getBosses(time, results.bossTime);
 
-            // Run calculations for each throw count from 0 to 5 inclusive
-            for (let throwCount = 5; throwCount >= 0; throwCount--) {
-                // Calculation logic
-                let totalScales = [0.0, 0.0, 0.0];
-                let bossEncounters = 0;
-                let tempRank = [rank1, rank2, rank3, rank4];
-                let tempTime = time;
-                let playerNoRank = 0;
+        // calculate tertiary data
+        results.finalRanks = getFinalRanks(initialRanks, results.bosses, results.rankChange);
+        results.hazard = getHazard(initialRanks, results.finalRanks, results.bosses, results.rankChange);
 
-               
-                
-                while (tempTime > 0) {
-                    for (let i = 0; i < tempRank.length; i++) {
-                        tempRank[i] += avgRankChange(throwCount);
-                        if (tempRank[i] > 999) {
-                            tempRank[i] = 999;
-                        } else if (tempRank[i] <= 0) {
-                            tempRank[i] = 0;
-                            playerNoRank = i + 1;
-                        }
-                    }
-                    tempTime -= avgTime(throwCount, throwWave);
+        // calculate fourth data idk
+        results.scales = getScales(results.hazard, results.bosses);
 
-                    if (playerNoRank !== 0) {
-                        break;
-                    }
+      }
 
-                    for (let i = 0; i < 3; i++) {
-                        totalScales[i] += avgScales(tempRank)[i];
-                    }
 
-                    bossEncounters++;
+      // if desiredcount is to be used
+      else {
+        // follow the according logic depending on desiredType
+        switch (desiredType) {
+          case 0:
+            // BOSS ENCOUNTERS
 
-                    for (let i = 0; i < tempRank.length; i++) {
-                        tempRank[i] += 20;
-                        if (tempRank[i] > 999) {
-                            tempRank[i] = 999;
-                        }
-                    }
-                }
+            // get time for boss
+            results.bossTime = getTime(throwCount, throwWave);
 
-                // Build the output text for each throw count
-               outputText += `
-                    Results for Throw Count = ${throwCount}
-                    
-                    Expected Boss Encounters: ${bossEncounters}
-                    Expected Bronze: ${totalScales[0].toFixed(3)}
-                    Expected Silver: ${totalScales[1].toFixed(3)}
-                    Expected Gold: ${totalScales[2].toFixed(3)}
-                    
-                `;
-                if (playerNoRank !== 0) {
-                    outputText += `
-                    Player ${playerNoRank} Hit EVP 0 after ${((time-tempTime)/3600.0).toFixed(3)} hours
-                    `;
-                    
-                }
-                 outputText += `
-                    Player 1's Final Expected EVP Rank: ${tempRank[0].toFixed(3)}
-                    Player 2's Final Expected EVP Rank: ${tempRank[1].toFixed(3)}
-                    Player 3's Final Expected EVP Rank: ${tempRank[2].toFixed(3)}
-                    Player 4's Final Expected EVP Rank: ${tempRank[3].toFixed(3)}
-                    
-                    ------------------------------
-                `;
+            // set bosses to desired count
+            results.bosses = new DataValue(desiredCount, 1, desiredCount, desiredCount);
+
+            // calculate necessary time
+            results.time = new DataValue(desiredCount * results.bossTime.avg, desiredCount * results.bossTime.std, desiredCount * results.bossTime.max, desiredCount * results.bossTime.min);
+
+            //check for a derank within that time
+            results.derankData = checkDerank(initialRanks, results.time.avg, throwCount, throwWave);
+            // if there is a derank on average
+            if ((results.derankData.avg < results.time.avg) && (results.derankData.player != -1)) {
+              // it is literally not possible without deranking, set time to max value so it isn't considered
+              results.time.avg = Number.MAX_VALUE;
             }
 
-            // Display the output in the textarea
-            document.getElementById("outputTextarea").value = outputText;
+            // calculate remaining data
+            results.rankChange = getRankChange(throwCount, throwWave);
+            results.finalRanks = getFinalRanks(initialRanks, results.bosses, results.rankChange);
+            results.hazard = getHazard(initialRanks, results.finalRanks, results.bosses, results.rankChange);
+            results.scales = getScales(results.hazard, results.bosses);
+            break;
+
+
+
+
+          case 1:
+            // BRONZE SCALES
+
+            break;
+
         }
-    </script>
+      }
+
+      // return results
+      return results;
+
+    }
+
+
+
+
+
+    // FUNCTION: prints results to console
+    function debugPrint(results) {
+      console.log("throw: " + results.throwCount + " wave: " + results.throwWave);
+      console.log("time: " + results.time.avg + " std: " + results.time.std + " max: " + results.time.max + " min: " + results.time.min);
+      console.log("bosstime: " + results.bossTime.avg + " std: " + results.bossTime.std + " max: " + results.bossTime.max + " min: " + results.bossTime.min);
+      console.log("rankchange: " + results.rankChange.avg + " std: " + results.rankChange.std + " max: " + results.rankChange.max + " min: " + results.rankChange.min);
+      console.log("bosses: " + results.bosses.avg + " std: " + results.bosses.std + " max: " + results.bosses.max + " min: " + results.bosses.min);
+      console.log("scales: " + results.scales.avg + " std: " + results.scales.std + " max: " + results.scales.max + " min: " + results.scales.min);
+      console.log("final ranks: " + results.finalRanks.avg + " std: " + results.finalRanks.std + " max: " + results.finalRanks.max + " min: " + results.finalRanks.min);
+      console.log("hazard: " + results.hazard.avg + " std: " + results.hazard.std + " max: " + results.hazard.max + " min: " + results.hazard.min);
+      console.log("derank player: " + results.derankData.player);
+      console.log("derank: " + results.derankData.avg + " std: " + results.derankData.std + " max: " + results.derankData.max + " min: " + results.derankData.min);
+    }
+
+
+
+
+
+    // FUNCTION: sorts results from highest to lowest
+    function insertionSort(arr, compare) {
+      for (let i = 1; i < arr.length; i++) {
+        let current = arr[i];
+        let j = i - 1;
+        while (j >= 0 && compare(arr[j], current) < 0) {
+          arr[j + 1] = arr[j];
+          j--;
+        }
+        arr[j + 1] = current;
+      }
+      return arr;
+    }
+
+
+
+
+
+    // FUNCTION: sorts results from lowest to highest
+    function ascInsertionSort(arr, compare) {
+      for (let i = 1; i < arr.length; i++) {
+        let current = arr[i];
+        let j = i - 1;
+        while (j >= 0 && compare(arr[j], current) > 0) {
+          arr[j + 1] = arr[j];
+          j--;
+        }
+        arr[j + 1] = current;
+      }
+      return arr;
+    }
+
+
+
+
+
+    // FUNCTION: compares a property between two objects of the same Class
+    function compareByProperty(a, b, property, index) {
+      // Split the property string into an array of properties
+      let properties = property.split('.');
+
+      // Use reduce to navigate through the properties
+      let aValue = properties.reduce((obj, prop) => obj[prop], a);
+      let bValue = properties.reduce((obj, prop) => obj[prop], b);
+
+      // If an index is provided, use it
+      if (index !== undefined) {
+        aValue = aValue[index];
+        bValue = bValue[index];
+      }
+
+      // Compare the values
+      if (aValue < bValue) {
+        return -1;
+      }
+      if (aValue > bValue) {
+        return 1;
+      }
+      return 0;
+    }
+
+
+
+    /*||||||||||
+    ||||MAIN||||
+    ||||||||||*/
+
+
+    function runScript() {
+      //|||||||||||||||||||||||||||||||||||||||||||||||||||||||
+      // USER VARIABLES
+
+      // player ranks
+      const rank1 = parseInt(document.getElementById("rank1").value);
+      const rank2 = parseInt(document.getElementById("rank2").value);
+      const rank3 = parseInt(document.getElementById("rank3").value);
+      const rank4 = parseInt(document.getElementById("rank4").value);
+      const hours = parseFloat(document.getElementById("time").value);
+      // used to store entered time in seconds if desiredCount == 0
+      const time = hours * 3600;
+
+      var selectElement = document.getElementById('dropdown');
+      var desiredType = selectElement.value;
+      selectElement.addEventListener('change', function () {
+        desiredType = this.value;
+      });
+
+      // 0: optimize for max count with time given
+      // !0: optimize for min time with desiredCount given
+      const desiredCount = 0;
+
+
+
+
+      //|||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+
+      // put player ranks into array
+      ranks = [rank1, rank2, rank3, rank4];
+
+      // Output section
+      let outputText = '';
+
+      // variable for results
+      let allResults = [];
+
+      console.log(time);
+      // calculate all results
+      for (let count = 0; count < 6; count++) {
+        for (let wave = 0; wave < 3; wave++) {
+          allResults[wave + (count * 3)] = getResults(ranks, time, count, wave + 1, desiredType, desiredCount);
+        }
+      }
+
+      // search for maximum count with fixed time
+      if (desiredCount == 0) {
+        switch (desiredType) {
+          case "Boss Encounters":
+            // boss encounters
+            allResults = insertionSort(allResults, (a, b) => compareByProperty(a, b, 'bosses.avg'));
+            break;
+
+          case "Bronze Scales":
+            // bronze
+            allResults = insertionSort(allResults, (a, b) => compareByProperty(a, b, 'scales.avg', 0));
+            break;
+
+          case "Silver Scales":
+            // silver
+            allResults = insertionSort(allResults, (a, b) => compareByProperty(a, b, 'scales.avg', 1));
+            break;
+
+          case "Gold Scales":
+            // gold
+            allResults = insertionSort(allResults, (a, b) => compareByProperty(a, b, 'scales.avg', 2));
+            break;
+
+          case "Rank Change Between Bosses":
+            // rank change between bosses
+            allResults = insertionSort(allResults, (a, b) => compareByProperty(a, b, 'rankChange.avg'));
+            break;
+
+          case "Average Hazard Level Of Bosses":
+            // hazard of bosses
+            allResults = insertionSort(allResults, (a, b) => compareByProperty(a, b, 'hazard.avg'));
+            break;
+        }
+      } else {
+        // if minimum time for fixed results is desired
+        // desiredType has already been accounted for
+        allResults = ascInsertionSort(allResults, (a, b) => compareByProperty(a, b, 'time.avg'));
+      }
+      // debug print optimal result
+      debugPrint(allResults[0]);
+
+
+      // check if derank occured
+      if (allResults[0].derankData.player != -1) {
+        outputText += `Player ${allResults[0].derankData.player} will reach EVP 0 at an average time of ${(allResults[0].derankData.avg / 3600)} hours. Following results use this as the average play time.\n`;
+      }
+
+      // print remaining results
+      outputText += `Optimal ${desiredType} for play session of ${(time / 3600)} hours:\n`;
+      outputText += `Optimal throw count: ${allResults[0].throwCount}\n`;
+      outputText += `Optimal throw wave: ${allResults[0].throwWave}\n`;
+      outputText += `Boss encounters: ${allResults[0].bosses.avg} \n`;
+      outputText += `Bronze: ${allResults[0].scales.avg[0]} \n`;
+      outputText += `Silver: ${allResults[0].scales.avg[1]} \n`;
+      outputText += `Gold: ${allResults[0].scales.avg[2]} \n`;
+      outputText += `Rank change: ${allResults[0].rankChange.avg} \n`;
+      outputText += `Hazard: ${allResults[0].hazard.avg} \n`;
+
+
+
+
+
+
+      // Display the output in the textarea
+      document.getElementById("outputTextarea").value = outputText;
+    }
+  </script>
 </body>
 
 </html>
