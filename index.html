@@ -13,7 +13,7 @@
 
 <body>
   <header>
-    <h1>Comodo_'s Splatoon 3 Salmon Run Scale Reward Optimizer v5</h1>
+    <h1>Comodo_'s Splatoon 3 Salmon Run Scale Reward Optimizer v1</h1>
   </header>
 
   <main>
@@ -131,9 +131,10 @@
 
       <label for="time">Desired Reward:</label>
       <select id="dropdown">
-        <option value=0>Bronze / Boss Encounters</option>
-        <option value=1>Silver</option>
-        <option value=2>Gold</option>
+        <option value=0>Bronze Scales</option>
+        <option value=1>Silver Scales</option>
+        <option value=2>Gold Scales</option>
+        <option value=3>Boss Encounters</option>
       </select>
       <br>
 
@@ -219,6 +220,7 @@
 
         // derank data, of class DerankData
         this.derankData;
+        this.callStackFlag = 0;
 
         // identifying data
         this.throwCount;
@@ -583,7 +585,7 @@
 
 
     // FUNCTION: calculates all result data given initial ranks, throwCount
-    function getResults(initialRanks, time, throwCount, desiredType, desiredCount, inputDerank, simCount) {
+    function getResults(initialRanks, time, throwCount, desiredType, inputDerank, simCount) {
 
 
       // create new ResultData object to store results in
@@ -595,95 +597,48 @@
 
 
       // if given time is to be used
-      if (desiredCount == 0) {
-        // use given time
-        console.log("using given time");
-        results.time = time;
+
+      // use given time
+      results.time = time;
 
 
-        // calculate data for checkDerank
+      // calculate data for checkDerank
+      results.rankChange = getRankChange(throwCount);
+      results.bossTime = getTime(throwCount);
+      results.bosses = getBosses(results.time, results.bossTime);
+      results.finalRanks = getFinalRanks(initialRanks, results.rankChange.avg, results.rankChange.std, results.rankChange.max, results.rankChange.min, Math.max(1, Math.round(results.bosses.avg)), simCount);
+
+      // get derank data
+      results.derankData = checkDerank(initialRanks, results, inputDerank);
+
+
+
+      // if there is a derank on average
+      if (results.derankData.avg < results.time && results.derankData.player != -1) {
+        // update time to match new time (THIS MEANS ALL RESULTS WILL BE BASED ON THE AVERAGE MAXIMUM PLAY TIME)
+        results.time = results.derankData.avg;
+
+        // recalculate time dependent data
         results.rankChange = getRankChange(throwCount);
         results.bossTime = getTime(throwCount);
         results.bosses = getBosses(results.time, results.bossTime);
         results.finalRanks = getFinalRanks(initialRanks, results.rankChange.avg, results.rankChange.std, results.rankChange.max, results.rankChange.min, Math.max(1, Math.round(results.bosses.avg)), simCount);
-
-        // get derank data
-        results.derankData = checkDerank(initialRanks, results, inputDerank);
-
-
-
-        // if there is a derank on average
-        if (results.derankData.avg < time && results.derankData.player != -1) {
-          // update time to match new time (THIS MEANS ALL RESULTS WILL BE BASED ON THE AVERAGE MAXIMUM PLAY TIME)
-          results.time = results.derankData.avg;
-
-          // recalculate time dependent data
-          results.rankChange = getRankChange(throwCount);
-          results.bossTime = getTime(throwCount);
-          results.bosses = getBosses(results.time, results.bossTime);
-          results.finalRanks = getFinalRanks(initialRanks, results.rankChange.avg, results.rankChange.std, results.rankChange.max, results.rankChange.min, Math.max(1, Math.round(results.bosses.avg)), simCount);
-        }
-
-        // calculate remaining data
-        results.hazard = getHazard(initialRanks, results.rankChange.avg, results.rankChange.std, results.rankChange.max, results.rankChange.min, Math.max(1, Math.round(results.bosses.avg)), simCount);
-        results.scales = getScales(results.hazard, results.bosses);
-
       }
-      // if desiredcount is to be used
-      else {
-        // follow the according logic depending on desiredType
-        switch (desiredType) {
-          case 0:
-            // BRONZE
 
-            // get time for boss
-            results.bossTime = getTime(throwCount);
+      // calculate remaining data
+      results.hazard = getHazard(initialRanks, results.rankChange.avg, results.rankChange.std, results.rankChange.max, results.rankChange.min, Math.max(1, Math.round(results.bosses.avg)), simCount);
+      results.scales = getScales(results.hazard, results.bosses);
 
-            // set bosses to desired count
-            results.bosses = new DataValue(desiredCount, 1, desiredCount, desiredCount);
-
-            // calculate necessary time
-            results.time = new DataValue(1, 1, 1, 1);
-
-
-            console.log("TEST EHLLO" + results.time.avg);
-            //check for a derank within that time
-            results.rankChange = getRankChange(throwCount);
-            results.derankData = checkDerank(initialRanks, results, inputDerank);
-            // if there is a derank on average
-            if ((results.derankData.avg < results.time.avg) && (results.derankData.player != -1)) {
-              // it is literally not possible without deranking, set time to max value so it isn't considered
-              results.time.avg = Number.MAX_VALUE;
-            }
-
-            // calculate remaining data
-            results.rankChange = getRankChange(throwCount);
-            results.finalRanks = getFinalRanks(initialRanks, results.rankChange.avg, results.rankChange.std, results.rankChange.max, results.rankChange.min, Math.max(1, Math.round(results.bosses.avg)), simCount);
-            results.hazard = getHazard(initialRanks, results.rankChange.avg, results.rankChange.std, results.rankChange.max, results.rankChange.min, Math.max(1, Math.round(results.bosses.avg)), simCount);
-            results.scales = getScales(results.hazard, results.bosses);
-            break;
-
-
-
-
-          case 1:
-            // SILVER
-
-            break;
-
-        }
-      }
 
       // return results
       return results;
 
     }
 
-
     // FUNCTION: prints results to console
     function debugPrint(results) {
       console.log("throw: " + results.throwCount);
-      console.log("time: " + results.time.avg + " std: " + results.time.std + " max: " + results.time.max + " min: " + results.time.min);
+      console.log("time: " + results.time);
       console.log("bosstime: " + results.bossTime.avg + " std: " + results.bossTime.std + " max: " + results.bossTime.max + " min: " + results.bossTime.min);
       console.log("rankchange: " + results.rankChange.avg + " std: " + results.rankChange.std + " max: " + results.rankChange.max + " min: " + results.rankChange.min);
       console.log("bosses: " + results.bosses.avg + " std: " + results.bosses.std + " max: " + results.bosses.max + " min: " + results.bosses.min);
@@ -785,14 +740,89 @@
     function typeToName(typeID) {
       switch (Number(typeID)) {
         case 0:
-          return "Bronze / Boss Encounters";
+          return "Bronze Scales";
         case 1:
-          return "Silver";
+          return "Silver Scales";
         case 2:
-          return "Gold";
+          return "Gold Scales";
+        case 3:
+          return "Boss Encounters";
       }
       return;
     }
+
+    // FUNCTION: Returns a ResultsData object with the lowest time for the desiredCount of desiredType given throwCount and initialRanks
+    function getFixed(initialRanks, throwCount, desiredType, desiredCount, inputDerank, simCount) {
+      let lower = 0;
+      let upper = 1;
+      let callStackLimit = 3546000;
+      let callStackFlag = 0;
+      let tempResults = new DataValue();
+
+      if (desiredType == 3) {
+        // BOSSES
+
+        //Double the upper bound until the result is above the desired value
+        while (upper < callStackLimit) {
+          tempResults = getResults(initialRanks, upper, throwCount, desiredType, inputDerank, simCount);
+          if (tempResults.bosses.avg >= desiredCount) {
+            break;
+          }
+          upper *= 2;
+          console.log(tempResults.bosses.avg)
+          console.log(desiredCount);
+        }
+        if (upper > callStackLimit) {
+          callStackFlag = 1;
+        }
+
+        // Perform a binary search from the current lower and upper bounds
+        while (lower < upper) {
+          let middle = (lower + upper) / 2;
+          tempResults = getResults(initialRanks, middle, throwCount, desiredType, inputDerank, simCount);
+          if (tempResults.bosses.avg >= desiredCount) {
+            upper = middle;
+          } else {
+            lower = middle + 1;
+          }
+        }
+      } else {
+        // SCALES 
+
+        //Double the upper bound until the result is above the desired value
+        while (upper < callStackLimit) {
+          tempResults = getResults(initialRanks, upper, throwCount, desiredType, inputDerank, simCount);
+          if (tempResults.scales.avg[desiredType] >= desiredCount) {
+            break;
+          }
+          upper *= 2;
+          console.log(tempResults.scales.avg[desiredType])
+          console.log(upper);
+        }
+        if (upper > callStackLimit) {
+          callStackFlag = 1;
+        }
+
+        // Perform a binary search from the current lower and upper bounds
+        while (lower < upper) {
+          let middle = (lower + upper) / 2;
+          tempResults = getResults(initialRanks, middle, throwCount, desiredType, inputDerank, simCount);
+          if (tempResults.scales.avg[desiredType] >= desiredCount) {
+            upper = middle;
+          } else {
+            lower = middle + 1;
+          }
+        }
+      }
+      // apply potential callStackFlag
+      tempResults.callStackFlag = callStackFlag;
+
+      // Return the optimal result data
+      return tempResults;
+    }
+
+
+
     /*||||||||||
     ||||MAIN||||
     ||||||||||*/
@@ -838,31 +868,8 @@
       // Fixed Quantity / Fixed Time
       // desiredCount == 0: optimize for max count with time given
       // !0: optimize for min time with desiredCount given
-      var desiredCount = 0;
+      var desiredCount = parseInt(document.getElementById("count").value);
       var buttons = document.getElementsByName('buttons');
-
-      var selectedValue;
-      for (var i = 0; i < buttons.length; i++) {
-        if (buttons[i].checked) {
-          selectedValue = buttons[i].value; // if this radio button is checked, get its value
-          break; // exit the loop as we've found the selected button
-        }
-      }
-      // if no button is checked, throw an error
-      if (selectedValue == undefined) {
-        document.getElementById("outputTextarea").value = `Please Choose Between Fixed Quantity And Fixed Time.`;
-      }
-      // update desiredCount to correct value
-      if (selectedValue == "fixedCount") {
-        desiredCount = parseInt(document.getElementById("count").value);
-      }
-
-
-
-
-
-
-      //|||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
       const ranks = [0, 0, 0, 0];
       // merge player title into player rank
@@ -876,22 +883,55 @@
       // variable for results
       let allResults = [];
 
-      // calculate all results
-      for (let count = 0; count < 6; count++) {
-        allResults[count] = getResults(ranks, time, count, desiredType, desiredCount, inputDerank, simCount);
-        debugPrint(allResults[count]);
+      var selectedValue;
+      for (var i = 0; i < buttons.length; i++) {
+        if (buttons[i].checked) {
+          selectedValue = buttons[i].value; // if this radio button is checked, get its value
+          break; // exit the loop as we've found the selected button
+        }
       }
-      // search for maximum count with fixed time
 
-      if (desiredCount == 0) {
-        allResults = insertionSort(allResults, (a, b) => compareByProperty(a, b, 'scales.avg', desiredType));
+      // END OF USER VARIABLES
+      //|||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+
+      // if no button is checked, throw an error
+      if (selectedValue == undefined) {
+        document.getElementById("outputTextarea").value = `Please Choose Between Fixed Quantity And Fixed Time.`;
+      } else if (selectedValue == "fixedCount") {
+        // fixed quantity
+
+        // calculate all results
+        for (let count = 0; count < 6; count++) {
+          allResults[count] = getFixed(ranks, count, desiredType, desiredCount, inputDerank, simCount);
+          debugPrint(allResults[count]);
+          allResults = ascInsertionSort(allResults, (a, b) => compareByProperty(a, b, 'time'));
+        }
       } else {
-        // if minimum time for fixed results is desired
-        // desiredType has already been accounted for
-        allResults = ascInsertionSort(allResults, (a, b) => compareByProperty(a, b, 'time.avg'));
+
+        // fixed time
+        // calculate all results
+        for (let count = 0; count < 6; count++) {
+          // duplicate variable for adjusting if bosses is chosen
+          let searchDesiredType = desiredType;
+          // if bosses was chosen
+          if (desiredType == 3) {
+            // adjust to just search for bronze scales
+            searchDesiredType = 0;
+          }
+          allResults[count] = getResults(ranks, time, count, desiredType, inputDerank, simCount);
+          debugPrint(allResults[count]);
+          allResults = insertionSort(allResults, (a, b) => compareByProperty(a, b, 'scales.avg', desiredType));
+        }
       }
-      // debug print optimal result
-      //debugPrint(allResults[0]);
+
+
+
+
+
+
+
+
 
 
 
@@ -902,8 +942,26 @@
 
 
       // print remaining results
+
+      //if callStackFlag is triggered
+      if (allResults[0].callStackFlag == 1) {
+        outputText += `Warning: maximum time exceeded.\n`;
+
+        // change desiredCount to what is displayed
+        if (desiredType != 3) {
+          desiredCount = allResults[0].scales.avg[desiredType];
+        }
+        else {
+          desiredCount = allResults[0].bosses.avg;
+        }
+      }
+
       let desiredTypeString = typeToName(desiredType)
-      outputText += `Optimal ${desiredTypeString} for play session of ${(time / 3600)} hours: \n`;
+      if (selectedValue == "fixedCount") {
+        outputText += `Minimum of ${(allResults[0].time / 3600)} hours required for ${desiredCount} ${desiredTypeString}\n`;
+      } else {
+        outputText += `Optimal ${desiredTypeString} for play session of ${(time / 3600)} hours: \n`;
+      }
       outputText += `Optimal throw count: ${allResults[0].throwCount} \n`;
       outputText += `Average Boss encounters: ${allResults[0].bosses.avg} \n`;
       outputText += `Average Bronze: ${allResults[0].scales.avg[0]} \n`;
