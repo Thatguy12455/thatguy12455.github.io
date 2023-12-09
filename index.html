@@ -13,7 +13,7 @@
 
 <body>
   <header>
-    <h1>Comodo_'s Splatoon 3 Salmon Run Scale Reward Optimizer</h1>
+    <h1>Comodo_'s Splatoon 3 Salmon Run Scale Reward Optimizer v1</h1>
   </header>
 
   <main>
@@ -220,7 +220,6 @@
 
         // derank data, of class DerankData
         this.derankData;
-        this.callStackFlag = 0;
 
         // identifying data
         this.throwCount;
@@ -756,7 +755,6 @@
       let lower = 0;
       let upper = 1;
       let callStackLimit = 3546000;
-      let callStackFlag = 0;
       let tempResults = new DataValue();
 
       if (desiredType == 3) {
@@ -771,9 +769,6 @@
           upper *= 2;
           console.log(tempResults.bosses.avg)
           console.log(desiredCount);
-        }
-        if (upper > callStackLimit) {
-          callStackFlag = 1;
         }
 
         // Perform a binary search from the current lower and upper bounds
@@ -814,8 +809,6 @@
           }
         }
       }
-      // apply potential callStackFlag
-      tempResults.callStackFlag = callStackFlag;
 
       // Return the optimal result data
       return tempResults;
@@ -929,39 +922,35 @@
 
 
 
-
-
-
-
-
-
       // check if derank occured
       if (allResults[0].derankData.player != -1) {
         outputText += `Player ${allResults[0].derankData.player} will drop below ${inputDerank[allResults[0].derankData.player]} 0 at an average time of ${(allResults[0].derankData.avg / 3600)} hours.Following results use this as the average play time.\n`;
       }
 
+      // change desiredType ID to string
+      let desiredTypeString = typeToName(desiredType);
 
-      // print remaining results
-
-      //if callStackFlag is triggered
-      if (allResults[0].callStackFlag == 1) {
-        outputText += `Warning: maximum time exceeded.\n`;
-
-        // change desiredCount to what is displayed
-        if (desiredType != 3) {
-          desiredCount = allResults[0].scales.avg[desiredType];
-        }
-        else {
-          desiredCount = allResults[0].bosses.avg;
-        }
-      }
-
-      let desiredTypeString = typeToName(desiredType)
+      // Print results dependent on if fixed quantity or time was chosen
       if (selectedValue == "fixedCount") {
+        if (desiredType == 3) {
+          // if we hit the time limit
+          if (allResults[0].bosses.avg < (desiredCount - 1)) {
+            outputText += `Warning: maximum time exceeded.\n`;
+            desiredCount = allResults[0].bosses.avg;
+          }
+        } else {
+          // if we hit the time limit
+          if (allResults[0].scales.avg[desiredType] < (desiredCount - 1)) {
+            outputText += `Warning: maximum time exceeded.\n`;
+            desiredCount = allResults[0].scales.avg[desiredType];
+          }
+        }
         outputText += `Minimum of ${(allResults[0].time / 3600)} hours required for ${desiredCount} ${desiredTypeString}\n`;
       } else {
         outputText += `Optimal ${desiredTypeString} for play session of ${(time / 3600)} hours: \n`;
       }
+
+      // print remaining results
       outputText += `Optimal throw count: ${allResults[0].throwCount} \n`;
       outputText += `Average Boss encounters: ${allResults[0].bosses.avg} \n`;
       outputText += `Average Bronze: ${allResults[0].scales.avg[0]} \n`;
