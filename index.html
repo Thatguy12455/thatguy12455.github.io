@@ -170,6 +170,27 @@
   <!-- Add your JavaScript links or scripts here -->
   <script>
 
+    /*|||||||||||||||||||||||
+    |||OUTPUT DOCUMENTATION||
+    |||||||||||||||||||||||*/
+
+    /*
+      Calculated results are stored in the array 'allResults'. The array has a size of 6, with indexes 0-5 representing each possible number of thrown games, sorted by descending desired reward if fixed time is chosen, and ascending time if fixed quanitity is chosen. The parameters are as follows:
+
+     - Identifying Data
+      allResults[].throwCount = number of games thrown
+      allResults[].time = (fixed quantity only) the average time to reach desired quantity
+     
+      
+      - Data Values (each one has a this.avg, this.std, this.max, and this.min for average, std deviation, max, and min respectively)
+      allResults[].bossTime = time between bosses
+      allResults[].bosses = number of bosses fought
+      allResults[].scales = contains avg[], std[], max[], and min[] arrays for data on each scale type
+      allResults[].hazard = hazard at which bosses are fought
+      allResults[].rankChange = change in rank between bosses
+      allResults[].finalRanks[] = an array, each with a this.avg, etc. value containing data on the final ranks of each player (0-1799). Sorry that this isn't consistent with the way the scales work i'll fix it if i have the time ;(
+      allResults[].derankData = if a player is to derank below the user inputted rank on average, this will contain data on the time which that happens, as well as a this.player variable which contains the index of the player set to derank first (-1 if none)
+    */
 
 
     /*||||||||||
@@ -214,7 +235,6 @@
         this.hazard;
         this.rankChange;
 
-        // an array of class PlayerData
         this.finalRanks;
 
 
@@ -813,9 +833,6 @@
       // Return the optimal result data
       return tempResults;
     }
-
-
-
     /*||||||||||
     ||||MAIN||||
     ||||||||||*/
@@ -914,7 +931,7 @@
           }
           allResults[count] = getResults(ranks, time, count, desiredType, inputDerank, simCount);
           debugPrint(allResults[count]);
-          allResults = insertionSort(allResults, (a, b) => compareByProperty(a, b, 'scales.avg', desiredType));
+          allResults = insertionSort(allResults, (a, b) => compareByProperty(a, b, 'scales.avg', searchDesiredType));
         }
       }
 
@@ -950,14 +967,14 @@
         outputText += `Optimal ${desiredTypeString} for play session of ${(time / 3600)} hours: \n`;
       }
 
-      // print remaining results
+      // print optimal results
       outputText += `Optimal throw count: ${allResults[0].throwCount} \n`;
-      outputText += `Average Boss encounters: ${allResults[0].bosses.avg} \n`;
-      outputText += `Average Bronze: ${allResults[0].scales.avg[0]} \n`;
-      outputText += `Average Silver: ${allResults[0].scales.avg[1]} \n`;
-      outputText += `Avgerage Gold: ${allResults[0].scales.avg[2]} \n`;
-      outputText += `Average Hazard: ${allResults[0].hazard.avg} \n`;
-      outputText += `Average Rank Change: ${allResults[0].rankChange.avg} \n`;
+      outputText += `Boss encounters: ${allResults[0].bosses.avg} \n`;
+      outputText += `Bronze: ${allResults[0].scales.avg[0]} \n`;
+      outputText += `Silver: ${allResults[0].scales.avg[1]} \n`;
+      outputText += `Gold: ${allResults[0].scales.avg[2]} \n`;
+      outputText += `Hazard of Bosses: ${allResults[0].hazard.avg} \n`;
+      outputText += `Rank Change Between Bosses: ${allResults[0].rankChange.avg} \n`;
 
       let playerFinalRankTitles = ["", "", "", ""];
       let playerFinalRankRemainder = [0, 0, 0, 0];
@@ -971,11 +988,10 @@
           playerFinalRankTitles[i] = titleToName(id);
         }
       }
-      outputText += `Average Final Rank of Player 1: ${playerFinalRankTitles[0]} ${playerFinalRankRemainder[0]} \n`;
-      outputText += `Average Final Rank of Player 2: ${playerFinalRankTitles[1]} ${playerFinalRankRemainder[1]} \n`;
-      outputText += `Average Final Rank of Player 3: ${playerFinalRankTitles[2]} ${playerFinalRankRemainder[2]} \n`;
-      outputText += `Average Final Rank of Player 4: ${playerFinalRankTitles[3]} ${playerFinalRankRemainder[3]} \n`;
-
+      outputText += `Final Rank of Player 1: ${playerFinalRankTitles[0]} ${playerFinalRankRemainder[0]} \n`;
+      outputText += `Final Rank of Player 2: ${playerFinalRankTitles[1]} ${playerFinalRankRemainder[1]} \n`;
+      outputText += `Final Rank of Player 3: ${playerFinalRankTitles[2]} ${playerFinalRankRemainder[2]} \n`;
+      outputText += `Final Rank of Player 4: ${playerFinalRankTitles[3]} ${playerFinalRankRemainder[3]} \n`;
 
       // Display the output in the textarea
       document.getElementById("outputTextarea").value = outputText;
